@@ -13,6 +13,10 @@ const app = express()
 app.use(express.urlencoded({extended:false}))  //query form of data
 app.use(express.json()) //json format of data
 
+// public dir as static
+app.use(express.static("public"))
+
+
 // middleware
 app.use(cors())  //cross origin resource sharing
 app.use(cookieParser(process.env.ACCESS_SECRET))
