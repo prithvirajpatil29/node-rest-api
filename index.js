@@ -28,11 +28,11 @@ app.use(expressFileUpload({
 // api route
 app.use('/api/auth',require('./route/authRoute'))
 app.use('/api/file',require('./route/fileRoute'))
-
+app.use('/api/user', require('./route/userRoute'))
 
 // default route
 app.use('**', (req, res) => {
-    res.status(StatusCodes.SERVICE_UNAVAILABLE).json({msg : 'Requested path not available'})
+    res.status(StatusCodes.SERVICE_UNAVAILABLE).json({msg : 'Requested path not available',success : false})
 })
 
 // server listen

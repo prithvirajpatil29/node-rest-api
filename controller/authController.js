@@ -9,7 +9,7 @@ const mailConfig = require('../util/mailconfig')
 const authController = {
     register : async (req, res) => {
         try{
-            const {name, email, mobile, password} = req.body
+            const {name, email, mobile,role, password } = req.body
 
             // email
             const extEmail = await User.findOne({email})
@@ -17,22 +17,23 @@ const authController = {
 
             // point the duplicate, any server response error 409
             if(extEmail)
-                return res.status(StatusCodes.CONFLICT).json({msg : `${email} already exists`})
+                return res.status(StatusCodes.CONFLICT).json({msg : `${email} already exists`,success : false})
 
                 
             if(extMobile)
-                return res.status(StatusCodes.CONFLICT).json({msg : `${mobile} already exists`})
+                return res.status(StatusCodes.CONFLICT).json({msg : `${mobile} already exists`,success : false})
             // encrypt the password into hash
             const encPass = await bcrypt.hash(password,10)
             let data = await User.create({
                 name,
                 email,
                 mobile,
+                role,
                 password:encPass
             })
-            res.status(StatusCodes.ACCEPTED).json({msg:"New user register succefully", user : data})
+            res.status(StatusCodes.ACCEPTED).json({msg:"New user register succefully", user : data,success : true})
         }catch(err){
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message,success : false})
         }
     },
     login : async (req, res) => {
@@ -44,12 +45,12 @@ const authController = {
         if(email){
             let extEmail = await User.findOne({email})
             if(!extEmail)
-                return res.status(StatusCodes.CONFLICT).json({msg : `${email} is not registered`})
+                return res.status(StatusCodes.CONFLICT).json({msg : `${email} is not registered`,success : false})
 
             // compare the password(string, hash)
             let isMatch = await comparePassword(password,extEmail.password)
             if(!isMatch){
-                return res.status(StatusCodes.UNAUTHORIZED).json({msg: 'Password is incorrect'})
+                return res.status(StatusCodes.UNAUTHORIZED).json({msg: 'Password is incorrect',success : false})
             }
 
             // generate access token
@@ -62,13 +63,13 @@ const authController = {
                 path : '/api/auth/token',
                 maxAge : 1*24*60*60*1000
             })
-            res.status(StatusCodes.OK).json({msg:'Login Successfully',authToken})
+            res.status(StatusCodes.OK).json({msg:'Login Successfully',authToken,success : true})
         }
         // if login through mobile
         if(mobile){
             let extMobile = await User.findOne({mobile})
             if(!extMobile)
-                return res.status(StatusCodes.CONFLICT).json({msg:'Password are not matched'})
+                return res.status(StatusCodes.CONFLICT).json({msg:'Password are not matched',success : false})
             
                 let authToken = createAccessToken({id : extMobile._id})
 
@@ -79,10 +80,10 @@ const authController = {
                     path : '/api/auth/token',
                     maxAge : 1*24*60*60*1000
                 })
-                res.status(StatusCodes.OK).json({msg : 'Login successfully',authToken})
+                res.status(StatusCodes.OK).json({msg : 'Login successfully',authToken,success : true})
         }
         }catch(err){
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message,success : false})
         }
     },
     logout : async (req, res) => {
@@ -92,7 +93,7 @@ const authController = {
             res.status(StatusCodes.OK).json({msg : "Logout successfully"})
             res.json({msg : `logout`})
         }catch(err){
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message,success : false})
         }
     },
     authToken : async(req, res) => {
@@ -100,28 +101,28 @@ const authController = {
             // read the login token from signed cookies
             const rToken = req.signedCookies.loginToken
             if(!rToken)
-                return res.status(StatusCodes.NOT_FOUND).json({msg : 'token not available'})
+                return res.status(StatusCodes.NOT_FOUND).json({msg : 'token not available',success : false})
 
             // valid user id or not
             await jwt.verify(rToken, process.env.ACCESS_SECRET, (err, user) => {
                 if(err)
-                    return res.status(StatusCodes.UNAUTHORIZED).json({msg : 'UnAuthorized login again'})
+                    return res.status(StatusCodes.UNAUTHORIZED).json({msg : 'UnAuthorized login again',success : false})
                 // if valid token
-                res.status(StatusCodes.OK).json({authToken:rToken})
+                res.status(StatusCodes.OK).json({authToken:rToken,success : true})
             })
             res.json({msg : `auth token`})
         }catch(err){
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message,success : false})
         }
     },
     currentUser : async(req, res) => {
         try{
             let single = await User.findById({_id : req.userId}).select('-password')
             if(!single)
-                return res.status(StatusCodes.NOT_FOUND).json({msg : `userId not found`})
-            res.status(StatusCodes.ACCEPTED).json({user: single})
+                return res.status(StatusCodes.NOT_FOUND).json({msg : `userId not found`,success : false})
+            res.status(StatusCodes.ACCEPTED).json({user: single,success : true})
         }catch(err){
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err.message,success : false})
         }
     },
     verifyUser : async (req, res) => {
@@ -129,10 +130,10 @@ const authController = {
             let {email} = req.body
             let extEmail = await User.findOne({email})
             if(!extEmail)
-                return res.status(StatusCodes.CONFLICT).json({msg : `${email} does not exist`, status:false})
-            res.status(StatusCodes.ACCEPTED).json({msg : `Email id verified successfully`, status:true})
+                return res.status(StatusCodes.CONFLICT).json({msg : `${email} does not exist`,success : false})
+            res.status(StatusCodes.ACCEPTED).json({msg : `Email id verified successfully`,success : true})
         } catch (err) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err,success : false})
         }
     },
     passwordLink: async(req, res) => {
@@ -140,7 +141,7 @@ const authController = {
             let {email} = req.body
             let extEmail = await User.findOne({email})
             if(!extEmail)
-                return res.status(StatusCodes.CONFLICT).json({msg : `${email} does not exist`, status:false})
+                return res.status(StatusCodes.CONFLICT).json({msg : `${email} does not exist`,success : false})
             //password token
             let passToken = createAccessToken({id : extEmail._id})
 
@@ -150,9 +151,9 @@ const authController = {
             let subject = `Reset your password`
             // send email
             let emailRes = await mailConfig(email,subject,passTemplate )
-            res.status(StatusCodes.ACCEPTED).json({msg : 'password link succesfully sent', status:emailRes})
+            res.status(StatusCodes.ACCEPTED).json({msg : 'password link succesfully sent',status:emailRes ,success : true})
         } catch (err) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err,success : false})
         }
     },
     updatePassword :async(req, res) => {
@@ -161,14 +162,14 @@ const authController = {
             let {password} = req.body;
             let extUser = await User.findById({_id : id})
             if(!extUser)
-                return res.status(StatusCodes.CONFLICT).json({msg : `Requested user info npt exists`})
+                return res.status(StatusCodes.CONFLICT).json({msg : `Requested user info npt exists`,success : false})
             // encrypt the password into hash
             const encPass = await bcrypt.hash(password,10)
             // update the password
             await User.findByIdAndUpdate({_id:id},{password:encPass})
-            return res.status(StatusCodes.ACCEPTED).json({msg : `Password successfully updated`})
+            return res.status(StatusCodes.ACCEPTED).json({msg : `Password successfully updated`,success : true})
         } catch (err) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err})
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({msg : err,success : false})
         }
     },
 }
