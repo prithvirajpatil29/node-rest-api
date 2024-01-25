@@ -64,8 +64,8 @@ const uploadFile = async (req, res) => {
 // read all - get
 const readFile = async (req, res) => {
     try {
-        let files = await FileSchema.find({})
-        let filteredFiles = files.filter((item) => item.user._id === req.userId)
+        let files = await FileSchema.find({userId: req.userId})
+        let filteredFiles = files.filter((item) => item.userId === req.userId)
         res.status(StatusCodes.OK).json({ length:files.length,files:filteredFiles,success : true })
     } catch (err) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg : err,success : false })
