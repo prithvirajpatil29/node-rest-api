@@ -16,7 +16,7 @@ app.use(express.json()) //json format of data
 
 // public dir as static
 app.use(express.static("public"))
-app.use(express.static("build"))
+// app.use(express.static("build"))
 
 // middleware
 app.use(cors())  //cross origin resource sharing
@@ -26,12 +26,12 @@ app.use(expressFileUpload({
     useTempFiles : true
 }))
 
-if(process.env.SERVER === "production"){
-    app.use('/', (req, res, next) => {
-        return res.sendFile(path.resolve(__dirname, './build/index.html'))
-        next()
-    })
-}
+// if(process.env.SERVER === "production"){
+//     app.use('/', (req, res, next) => {
+//         return res.sendFile(path.resolve(__dirname, './build/index.html'))
+//         next()
+//     })
+// }
 
 // api route
 app.use('/api/auth',require('./route/authRoute'))
