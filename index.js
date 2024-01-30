@@ -25,10 +25,10 @@ app.use(expressFileUpload({
     limits : {fileSize:10*1024*1024},
     useTempFiles : true
 }))
-
-if(process.env.SERVER === "production"){
-    app.use('/', (req, res, next) => {
-        return res.sendFile(path.resolve(__dirname, './build/index.html'))
+if(process.env.SERVER === "production") {
+    // executes in production mode
+    app.use(`/`, (req,res, next) => {
+        return res.sendFile(path.resolve(__dirname,`./build/index.html`))
         next()
     })
 }
