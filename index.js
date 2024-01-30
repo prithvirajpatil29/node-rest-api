@@ -39,9 +39,9 @@ app.use('/api/file',require('./route/fileRoute'))
 app.use('/api/user', require('./route/userRoute'))
 
 // default route
-app.use('**', (req, res) => {
-    res.status(StatusCodes.SERVICE_UNAVAILABLE).json({msg : 'Requested path not available',success : false})
-})
+// app.use('**', (req, res) => {
+//     res.status(StatusCodes.SERVICE_UNAVAILABLE).json({msg : 'Requested path not available',success : false})
+// })
 
 // server listen
 app.listen(PORT, () => {
